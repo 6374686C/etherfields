@@ -353,26 +353,31 @@ const App: React.FC = () => {
 			/>
 
 			{!isInitialized ? (
-				<div className="relative z-10 flex flex-col items-center text-center">
-					<h1 className="cinematic-shine text-5xl md:text-7xl font-bold tracking-tight mb-4 font-josefin-sans">Etherfields</h1>
-					<p className="text-sm md:text-base text-white mb-8 max-w-lg">
-						Create your own immersive soundscape. Click below to begin.
-					</p>
-					<button
-						onClick={initializeAudio}
-						disabled={isLoading}
-						className="shine-hover group relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white bg-white/5 backdrop-blur-md rounded-full shadow-lg ring-1 ring-inset ring-white/20 transition-all duration-300 hover:bg-white/15 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-white/60 disabled:opacity-50 disabled:cursor-not-allowed"
-					>
-						{isLoading ? (
-							'Loading Assets...'
-						) : (
-							<>
-								<SparklesIcon className="w-6 h-6 mr-3" />
-								Start Experience
-							</>
-						)}
-					</button>
-				</div>
+				<>
+					<div className="relative z-10 flex flex-col items-center text-center">
+						<h1 className="cinematic-shine text-5xl md:text-7xl font-bold tracking-tight mb-4 font-josefin-sans">Etherfields</h1>
+						<p className="text-sm md:text-base text-white mb-8 max-w-lg">
+							Create your own immersive soundscape. Click below to begin.
+						</p>
+						<button
+							onClick={initializeAudio}
+							disabled={isLoading}
+							className="shine-hover group relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white bg-white/5 backdrop-blur-md rounded-full shadow-lg ring-1 ring-inset ring-white/20 transition-all duration-300 hover:bg-white/15 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-white/60 disabled:opacity-50 disabled:cursor-not-allowed"
+						>
+							{isLoading ? (
+								'Loading Assets...'
+							) : (
+								<>
+									<SparklesIcon className="w-6 h-6 mr-3" />
+									Start Experience
+								</>
+							)}
+						</button>
+					</div>
+					<div className="fixed z-20 bottom-6 left-1/2 -translate-x-1/2 text-white/60 text-xs md:text-sm pointer-events-none text-shadow-subtle">
+						<span>🎧 3D Binaural Sounds | Headphones recommended</span>
+					</div>
+				</>
 			) : (
 				<>
 					<div
@@ -411,41 +416,44 @@ const App: React.FC = () => {
 							</header>
 
 							<ThemeSelector themes={themesForSelector} activeTheme={activeTheme} onSelect={handleThemeChange} />
+                            
+                            <div className="slider-container relative w-full overflow-x-auto pb-4 -mb-4">
+                                <div className="flex flex-row justify-start md:justify-center items-end gap-x-4 md:gap-x-6 my-8 px-4 md:px-2 h-60 min-h-60 min-w-max">
+                                    {activeTheme.id === CUSTOM_THEME_ID && !customThemeConfig.baseThemeId ? (
+                                        <div className="flex flex-col items-center justify-center h-full w-full">
+                                            <button 
+                                                onClick={() => setIsCustomEditorOpen(true)}
+                                                className="shine-hover flex flex-col items-center justify-center p-8 bg-white/5 backdrop-blur-md rounded-2xl hover:bg-white/15 transition-all duration-300 ring-1 ring-inset ring-white/20 hover:ring-white/30"
+                                            >
+                                                <PlusIcon className="w-12 h-12" />
+                                                <span className="mt-4 text-lg font-semibold">Add Sounds</span>
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <VolumeSlider
+                                                key="main-theme"
+                                                label={mainSliderInfo.label}
+                                                iconClassName={mainSliderInfo.icon}
+                                                value={mainThemeVolumes[activeThemeId] ?? 0.7}
+                                                onChange={(e) => handleMainVolumeChange(parseFloat(e.target.value))}
+                                            />
+                                            {currentLayerSet.map((layer) => (
+                                                <VolumeSlider
+                                                    key={layer.id}
+                                                    label={layer.name}
+                                                    iconClassName={layer.icon}
+                                                    value={activeVolumes[layer.id] ?? 0}
+                                                    onChange={(e) => handleVolumeChange(layer.id, parseFloat(e.target.value))}
+                                                    isEditing={isEditing && activeThemeId !== CUSTOM_THEME_ID}
+                                                    onRemove={() => handleLayerRemove(layer.id)}
+                                                />
+                                            ))}
+                                        </>
+                                    )}
+                                </div>
+                            </div>
 
-							<div className="flex flex-row justify-center items-end gap-x-2 md:gap-x-6 my-8 px-2 h-60 min-h-60">
-								{activeTheme.id === CUSTOM_THEME_ID && !customThemeConfig.baseThemeId ? (
-									<div className="flex flex-col items-center justify-center h-full w-full">
-										<button 
-											onClick={() => setIsCustomEditorOpen(true)}
-											className="shine-hover flex flex-col items-center justify-center p-8 bg-white/5 backdrop-blur-md rounded-2xl hover:bg-white/15 transition-all duration-300 ring-1 ring-inset ring-white/20 hover:ring-white/30"
-										>
-											<PlusIcon className="w-12 h-12" />
-											<span className="mt-4 text-lg font-semibold">Add Sounds</span>
-										</button>
-									</div>
-								) : (
-									<>
-										<VolumeSlider
-											key="main-theme"
-											label={mainSliderInfo.label}
-											iconClassName={mainSliderInfo.icon}
-											value={mainThemeVolumes[activeThemeId] ?? 0.7}
-											onChange={(e) => handleMainVolumeChange(parseFloat(e.target.value))}
-										/>
-										{currentLayerSet.map((layer) => (
-											<VolumeSlider
-												key={layer.id}
-												label={layer.name}
-												iconClassName={layer.icon}
-												value={activeVolumes[layer.id] ?? 0}
-												onChange={(e) => handleVolumeChange(layer.id, parseFloat(e.target.value))}
-												isEditing={isEditing && activeThemeId !== CUSTOM_THEME_ID}
-												onRemove={() => handleLayerRemove(layer.id)}
-											/>
-										))}
-									</>
-								)}
-							</div>
 
 							{isEditing && activeThemeId !== CUSTOM_THEME_ID && (
 								<LayerEditor
