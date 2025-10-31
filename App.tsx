@@ -13,9 +13,9 @@ import { SparklesIcon, EditIcon, EyeIcon, EyeSlashIcon, InfoIcon, PlusIcon } fro
 
 // ---- Subtitles here (edit freely) ----
 const THEME_SUBTITLES: Record<string, string> = {
-	'dark-drone': 'Dark sci-fi bed: deep engines, space hum, and distant storms.',
-	'floating-dreaming': 'Soft, airy ambience for relaxing, reading, or winding down.',
-	'focus-meditation': 'Minimal, steady textures that help you settle into deep work.'
+	'dark-drone': 'Dark drone ambient: deep engines, space hum, and distant planets',
+	'floating-dreaming': 'Soft, airy ambience for relaxing, sleeping, or winding down',
+	'focus-meditation': 'Minimal, steady textures that help you settle into deep focus'
 };
 // --------------------------------------
 
@@ -79,7 +79,9 @@ const App: React.FC = () => {
 		return getInitialState('etherfields_theme_volumes', defaultVolumes);
 	});
 
-	const activeTheme = useMemo(() => {
+	// FIX: Explicitly set the return type of useMemo to `Theme` to fix type inference issues.
+	// This ensures `activeTheme` has a consistent and correct type, resolving downstream errors.
+	const activeTheme = useMemo((): Theme => {
         if (activeThemeId === CUSTOM_THEME_ID) {
             const baseTheme = THEMES.find(t => t.id === customThemeConfig.baseThemeId) || THEMES[0];
             return {
@@ -92,7 +94,7 @@ const App: React.FC = () => {
                 defaultVolumes: {},
             };
         }
-		return customThemes[activeThemeId];
+		return customThemes[activeThemeId] || THEMES[0];
 	}, [customThemes, activeThemeId, customThemeConfig]);
     
 	const activeVolumes = useMemo(() => themeVolumes[activeThemeId] || {}, [themeVolumes, activeThemeId]);
@@ -335,8 +337,8 @@ const App: React.FC = () => {
 
 			{!isInitialized ? (
 				<div className="relative z-10 flex flex-col items-center text-center">
-					<h1 className="text-5xl md:text-7xl font-bold tracking-widest mb-4 font-josefin-sans">Etherfields</h1>
-					<p className="text-lg md:text-xl text-white/80 mb-8 max-w-lg">
+					<h1 className="cinematic-shine text-5xl md:text-7xl font-bold tracking-tight mb-4 font-josefin-sans">Etherfields</h1>
+					<p className="text-sm md:text-base text-white mb-8 max-w-lg">
 						Create your own immersive soundscape. Click below to begin.
 					</p>
 					<button
@@ -382,11 +384,11 @@ const App: React.FC = () => {
 								</button>
 							</div>
 
-							<header className="text-center mb-6">
+							<header className="text-center mb-8">
 								<h1 className={`text-4xl md:text-5xl font-bold tracking-wider transition-all duration-500 ease-in-out ${fontClass} glow`}>
 									{activeTheme.name.split('/')[0]}
 								</h1>
-								<p className="text-gray-300 mt-2 text-lg">
+								<p className="text-white mt-4 text-sm">
 									{THEME_SUBTITLES[activeTheme.id] ?? 'Your personalized soundscape.'}
 								</p>
 							</header>

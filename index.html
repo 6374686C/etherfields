@@ -60,6 +60,38 @@
   .font-dancing-script { font-family: 'Dancing Script', cursive; }
   .font-josefin-sans { font-family: 'Josefin Sans', sans-serif; }
   .glow { text-shadow: 0 0 8px rgba(255, 255, 255, 0.4), 0 0 2px rgba(255, 255, 255, 0.6); }
+
+  /* New Cinematic Shine Animation - Clipped to Text */
+  .cinematic-shine {
+    /* The gradient creates a subtle moving highlight */
+    background: linear-gradient(
+      -75deg, 
+      #e8e8e8 40%, 
+      #ffffff 50%, 
+      #e8e8e8 60%
+    );
+    background-size: 200% auto;
+
+    /* Animate the background position to create the shine effect */
+    animation: shineAnimation 5s infinite linear;
+
+    /* Use the text as a mask for the background */
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  @keyframes shineAnimation {
+    0% {
+      background-position: 200% center;
+    }
+    40% {
+      background-position: -200% center;
+    }
+    100% {
+      background-position: -200% center;
+    }
+  }
 </style>
 <link rel="stylesheet" href="/index.css">
 </head>

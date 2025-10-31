@@ -27,7 +27,7 @@ export const THEMES: Theme[] = [
     vantaEffect: 'WAVES',
     layers: ['planets', 'space_debris', 'nasa_chatter'],
     defaultThemeVolume: 0.7,
-    defaultVolumes: { planets: 0.3, space_debris: 0.45, nasa_chatter: 0.2 },
+    defaultVolumes: { planets: 0.2, space_debris: 0.7, nasa_chatter: 0.4 },
   },
   {
     id: 'floating-dreaming',
@@ -49,4 +49,4 @@ export const THEMES: Theme[] = [
   },
 ];
 
-export const FADE_TIME = 3.5; // seconds for crossfading
+export const FADE_TIME = 4.5; // seconds for crossfading
