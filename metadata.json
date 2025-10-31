@@ -1,0 +1,5 @@
+{
+  "name": "Etherfields",
+  "description": "An immersive web application that allows you to create your own endless ambient experience by selecting one of three main ambient themes and blending in environmental sounds using volume sliders.",
+  "requestFramePermissions": []
+}
