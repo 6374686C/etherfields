@@ -8,7 +8,8 @@ import MasterControls from './components/MasterControls';
 import VantaBackground from './components/VantaBackground';
 import LayerEditor from './components/LayerEditor';
 import InfoModal from './components/InfoModal';
-import { SparklesIcon, EditIcon, EyeIcon, EyeSlashIcon, InfoIcon } from './components/Icons';
+import CustomThemeEditor from './components/CustomThemeEditor';
+import { SparklesIcon, EditIcon, EyeIcon, EyeSlashIcon, InfoIcon, PlusIcon } from './components/Icons';
 
 // ---- Subtitles here (edit freely) ----
 const THEME_SUBTITLES: Record<string, string> = {
@@ -17,6 +18,19 @@ const THEME_SUBTITLES: Record<string, string> = {
 	'focus-meditation': 'Minimal, steady textures that help you settle into deep work.'
 };
 // --------------------------------------
+
+const CUSTOM_THEME_ID = 'custom';
+
+// Define a special theme for the pre-initialized welcome screen
+const preInitTheme: Theme = {
+	id: 'welcome-screen',
+	name: 'Welcome',
+	audioSrc: '',
+	vantaEffect: 'WAVES',
+	layers: [],
+	defaultThemeVolume: 0,
+	defaultVolumes: {}
+};
 
 const getInitialState = <T,>(key: string, defaultValue: T): T => {
 	try {
@@ -31,6 +45,7 @@ const getInitialState = <T,>(key: string, defaultValue: T): T => {
 const App: React.FC = () => {
 	const [isEditing, setIsEditing] = useState(false);
 	const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+	const [isCustomEditorOpen, setIsCustomEditorOpen] = useState(false);
 	const [isUIVisible, setIsUIVisible] = useState(true);
 	const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
 
@@ -40,7 +55,11 @@ const App: React.FC = () => {
 	});
 
 	const [activeThemeId, setActiveThemeId] = useState<string>(() =>
-		getInitialState('etherfields_active_theme_id', THEMES[0].id)
+		getInitialState('etherfields_active_theme_id', 'focus-meditation') // Default to Focus theme
+	);
+	
+	const [customThemeConfig, setCustomThemeConfig] = useState<{ baseThemeId: string | null; layers: string[] }>(() =>
+		getInitialState('etherfields_custom_config', { baseThemeId: null, layers: [] })
 	);
 
 	const [mainThemeVolumes, setMainThemeVolumes] = useState<Record<string, number>>(() => {
@@ -48,7 +67,8 @@ const App: React.FC = () => {
 			(acc, theme) => ({ ...acc, [theme.id]: theme.defaultThemeVolume }),
 			{}
 		);
-		return getInitialState('etherfields_main_theme_volumes', defaultVolumes);
+		const initialCustomVolume = { [CUSTOM_THEME_ID]: 0.7 };
+		return getInitialState('etherfields_main_theme_volumes', {...defaultVolumes, ...initialCustomVolume});
 	});
 
 	const [themeVolumes, setThemeVolumes] = useState<Record<string, Record<string, number>>>(() => {
@@ -59,7 +79,22 @@ const App: React.FC = () => {
 		return getInitialState('etherfields_theme_volumes', defaultVolumes);
 	});
 
-	const activeTheme = useMemo(() => customThemes[activeThemeId], [customThemes, activeThemeId]);
+	const activeTheme = useMemo(() => {
+        if (activeThemeId === CUSTOM_THEME_ID) {
+            const baseTheme = THEMES.find(t => t.id === customThemeConfig.baseThemeId) || THEMES[0];
+            return {
+                id: CUSTOM_THEME_ID,
+                name: 'Custom',
+                audioSrc: baseTheme.audioSrc,
+                vantaEffect: 'FOG',
+                layers: customThemeConfig.layers,
+                defaultThemeVolume: 0.7,
+                defaultVolumes: {},
+            };
+        }
+		return customThemes[activeThemeId];
+	}, [customThemes, activeThemeId, customThemeConfig]);
+    
 	const activeVolumes = useMemo(() => themeVolumes[activeThemeId] || {}, [themeVolumes, activeThemeId]);
 
 	const allInitialVolumes = useMemo(() => {
@@ -80,33 +115,34 @@ const App: React.FC = () => {
 		selectTheme,
 		setLayerVolume,
 		setMainVolume,
-		toggleMute
+		toggleMute,
+		resetAndPlayTheme
 	} = useAudioEngine({
 		themes: THEMES,
 		allLayers: ALL_SOUND_LAYERS,
-		initialThemeId: activeThemeId,
+		initialThemeId: activeThemeId === CUSTOM_THEME_ID ? (customThemeConfig.baseThemeId || THEMES[0].id) : activeThemeId,
 		initialVolumes: allInitialVolumes,
 		initialMainVolume: mainThemeVolumes[activeThemeId]
 	});
 
 	useEffect(() => {
-		if (isInitialized)
-			localStorage.setItem('etherfields_active_theme_id', JSON.stringify(activeThemeId));
+		if (isInitialized) localStorage.setItem('etherfields_active_theme_id', JSON.stringify(activeThemeId));
 	}, [activeThemeId, isInitialized]);
+	
+	useEffect(() => {
+		if (isInitialized) localStorage.setItem('etherfields_custom_config', JSON.stringify(customThemeConfig));
+	}, [customThemeConfig, isInitialized]);
 
 	useEffect(() => {
-		if (isInitialized)
-			localStorage.setItem('etherfields_main_theme_volumes', JSON.stringify(mainThemeVolumes));
+		if (isInitialized) localStorage.setItem('etherfields_main_theme_volumes', JSON.stringify(mainThemeVolumes));
 	}, [mainThemeVolumes, isInitialized]);
 
 	useEffect(() => {
-		if (isInitialized)
-			localStorage.setItem('etherfields_custom_themes', JSON.stringify(customThemes));
+		if (isInitialized) localStorage.setItem('etherfields_custom_themes', JSON.stringify(customThemes));
 	}, [customThemes, isInitialized]);
 
 	useEffect(() => {
-		if (isInitialized)
-			localStorage.setItem('etherfields_theme_volumes', JSON.stringify(themeVolumes));
+		if (isInitialized) localStorage.setItem('etherfields_theme_volumes', JSON.stringify(themeVolumes));
 	}, [themeVolumes, isInitialized]);
 
 	useEffect(() => {
@@ -124,36 +160,49 @@ const App: React.FC = () => {
 			if (document.exitFullscreen) document.exitFullscreen();
 		}
 	}, []);
-
+    
 	const handleThemeChange = useCallback(
 		(theme: Theme) => {
+			if (theme.id === activeThemeId) return;
+
+			// If selecting custom theme and it's not set up, open editor first.
+			if (theme.id === CUSTOM_THEME_ID && !customThemeConfig.baseThemeId) {
+				setIsCustomEditorOpen(true);
+				return;
+			}
+			
 			const oldTheme = activeTheme;
 			oldTheme.layers.forEach((layerId) => {
-				if (!theme.layers.includes(layerId)) setLayerVolume(layerId, 0, FADE_TIME);
+				if (!theme.layers.includes(layerId)) {
+					setLayerVolume(layerId, 0, FADE_TIME);
+				}
 			});
 
 			setActiveThemeId(theme.id);
+			
+			const isSwitchingToCustom = theme.id === CUSTOM_THEME_ID;
+			const audioThemeToPlay = isSwitchingToCustom ? customThemeConfig.baseThemeId! : theme.id;
 			const newThemeMainVolume = mainThemeVolumes[theme.id] ?? theme.defaultThemeVolume;
-			selectTheme(theme.id, newThemeMainVolume);
+			selectTheme(audioThemeToPlay, newThemeMainVolume);
 
-			const newThemeVolumes = themeVolumes[theme.id] || customThemes[theme.id].defaultVolumes;
-			customThemes[theme.id].layers.forEach((layerId) => {
-				setLayerVolume(layerId, newThemeVolumes[layerId] ?? 0, FADE_TIME);
+			const newThemeVolumes = themeVolumes[theme.id] || customThemes[theme.id]?.defaultVolumes || {};
+			theme.layers.forEach((layerId) => {
+				setLayerVolume(layerId, newThemeVolumes[layerId] ?? 0.5, FADE_TIME);
 			});
 			setIsEditing(false);
 		},
-		[selectTheme, setLayerVolume, activeTheme, themeVolumes, customThemes, mainThemeVolumes]
+		[activeThemeId, selectTheme, setLayerVolume, activeTheme, themeVolumes, customThemes, mainThemeVolumes, customThemeConfig]
 	);
 
 	const handleMainVolumeChange = useCallback(
 		(volume: number) => {
-			setMainThemeVolumes((prev) => ({
-				...prev,
-				[activeThemeId]: volume
-			}));
-			setMainVolume(volume);
+			setMainThemeVolumes((prev) => ({ ...prev, [activeThemeId]: volume }));
+			const audioThemeId = activeThemeId === CUSTOM_THEME_ID ? customThemeConfig.baseThemeId : activeThemeId;
+			if (audioThemeId) {
+				setMainVolume(volume, 0.1, audioThemeId);
+			}
 		},
-		[setMainVolume, activeThemeId]
+		[setMainVolume, activeThemeId, customThemeConfig.baseThemeId]
 	);
 
 	const handleVolumeChange = useCallback(
@@ -207,16 +256,32 @@ const App: React.FC = () => {
 		setCustomThemes((prev) => ({ ...prev, [activeThemeId]: defaultTheme }));
 		setThemeVolumes((prev) => ({ ...prev, [activeThemeId]: defaultTheme.defaultVolumes }));
 		setMainThemeVolumes((prev) => ({ ...prev, [activeThemeId]: defaultTheme.defaultThemeVolume }));
-		setMainVolume(defaultTheme.defaultThemeVolume);
+		setMainVolume(defaultTheme.defaultThemeVolume, FADE_TIME, defaultTheme.id);
 
 		const allLayerIds = new Set([...oldCustomTheme.layers, ...defaultTheme.layers]);
 		allLayerIds.forEach((layerId) => {
 			const newVolume = defaultTheme.layers.includes(layerId)
 				? defaultTheme.defaultVolumes[layerId] ?? 0
 				: 0;
-			setLayerVolume(layerId, newVolume);
+			setLayerVolume(layerId, newVolume, FADE_TIME);
 		});
 	}, [activeThemeId, customThemes, setLayerVolume, setMainVolume]);
+
+	const handleSaveCustomTheme = useCallback((config: { baseThemeId: string | null; layers: string[] }) => {
+		if (!config.baseThemeId) return;
+	
+		// 1. Call the new atomic "stop-then-start" audio function
+		resetAndPlayTheme(
+			config.baseThemeId,
+			config.layers,
+			mainThemeVolumes[CUSTOM_THEME_ID] ?? 0.7
+		);
+	
+		// 2. Update React state to match the new audio state
+		setCustomThemeConfig(config);
+		setActiveThemeId(CUSTOM_THEME_ID);
+	
+	}, [resetAndPlayTheme, mainThemeVolumes]);
 
 	const currentLayerSet = useMemo(() => {
 		return activeTheme.layers
@@ -224,20 +289,53 @@ const App: React.FC = () => {
 			.filter((l): l is SoundLayer => !!l);
 	}, [activeTheme]);
 
+	const themesForSelector = useMemo((): Theme[] => {
+		const customThemeForUI: Theme = {
+			id: CUSTOM_THEME_ID, name: 'Custom', audioSrc: '', vantaEffect: 'HALO',
+			layers: [], defaultThemeVolume: 0.7, defaultVolumes: {}
+		};
+		return [...THEMES, customThemeForUI];
+	}, []);
+	
+	const handleEditClick = () => {
+		if (activeThemeId === CUSTOM_THEME_ID) {
+			setIsCustomEditorOpen(true);
+		} else {
+			setIsEditing(!isEditing);
+		}
+	};
+
 	const themeFontClasses: Record<string, string> = {
 		'dark-drone': 'font-orbitron',
 		'floating-dreaming': 'font-dancing-script',
 		'focus-meditation': 'font-josefin-sans'
 	};
-	const fontClass = themeFontClasses[activeTheme.id] || '';
+	const fontClass = themeFontClasses[activeTheme.id] || 'font-josefin-sans';
+	
+	const mainSliderInfo = useMemo(() => {
+		if (activeThemeId === CUSTOM_THEME_ID) {
+			const base = THEMES.find(t => t.id === customThemeConfig.baseThemeId);
+            if (base) {
+                // 'Floating / Dreaming' -> 'Floating'
+                // 'Dark Drone' -> 'Dark'
+                const shortName = base.name.split(' / ')[0].split(' ')[0];
+                return { label: shortName, icon: 'fa-solid fa-wave-square' };
+            }
+			return { label: 'Music', icon: 'fa-solid fa-wave-square' };
+		}
+		return { label: 'Music', icon: 'fa-solid fa-wave-square' };
+	}, [activeThemeId, customThemeConfig.baseThemeId]);
 
 	return (
 		<main className="w-screen h-screen overflow-hidden flex items-center justify-center p-4 text-white">
-			<VantaBackground activeTheme={activeTheme} volumes={activeVolumes} />
+			<VantaBackground 
+				activeTheme={isInitialized ? activeTheme : preInitTheme} 
+				volumes={isInitialized ? activeVolumes : {}} 
+			/>
 
 			{!isInitialized ? (
 				<div className="relative z-10 flex flex-col items-center text-center">
-					<h1 className="text-5xl md:text-7xl font-bold tracking-wider mb-4">Etherfields</h1>
+					<h1 className="text-5xl md:text-7xl font-bold tracking-widest mb-4 font-josefin-sans">Etherfields</h1>
 					<p className="text-lg md:text-xl text-white/80 mb-8 max-w-lg">
 						Create your own immersive soundscape. Click below to begin.
 					</p>
@@ -264,13 +362,7 @@ const App: React.FC = () => {
 						}`}
 					>
 						<div className="relative w-full p-6 md:p-10 bg-black/30 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/20">
-							<style>{`
-								.font-orbitron { font-family: 'Orbitron', sans-serif; }
-								.font-dancing-script { font-family: 'Dancing Script', cursive; }
-								.font-josefin-sans { font-family: 'Josefin Sans', sans-serif; }
-								.glow { text-shadow: 0 0 8px rgba(255, 255, 255, 0.4), 0 0 2px rgba(255, 255, 255, 0.6); }
-							`}</style>
-
+							
 							<div className="absolute top-6 right-6 z-20 flex items-center gap-x-2">
 								<button
 									onClick={() => setIsInfoModalOpen(true)}
@@ -281,7 +373,7 @@ const App: React.FC = () => {
 									<InfoIcon className="w-6 h-6" />
 								</button>
 								<button
-									onClick={() => setIsEditing(!isEditing)}
+									onClick={handleEditClick}
 									className="shine-hover p-2 bg-white/5 backdrop-blur-md rounded-full hover:bg-white/15 transition-all duration-300 ring-1 ring-inset ring-white/20 hover:ring-white/30"
 									aria-label="Edit Layers"
 									title="Edit Layers"
@@ -295,34 +387,48 @@ const App: React.FC = () => {
 									{activeTheme.name.split('/')[0]}
 								</h1>
 								<p className="text-gray-300 mt-2 text-lg">
-									{THEME_SUBTITLES[activeTheme.id] ?? activeTheme.name}
+									{THEME_SUBTITLES[activeTheme.id] ?? 'Your personalized soundscape.'}
 								</p>
 							</header>
 
-							<ThemeSelector themes={THEMES} activeTheme={activeTheme} onSelect={handleThemeChange} />
+							<ThemeSelector themes={themesForSelector} activeTheme={activeTheme} onSelect={handleThemeChange} />
 
 							<div className="flex flex-row justify-center items-end gap-x-2 md:gap-x-6 my-8 px-2 h-60 min-h-60">
-								<VolumeSlider
-									key="main-theme"
-									label="Atmosphere"
-									iconClassName="fa-solid fa-wave-square"
-									value={mainThemeVolumes[activeThemeId] ?? 0.7}
-									onChange={(e) => handleMainVolumeChange(parseFloat(e.target.value))}
-								/>
-								{currentLayerSet.map((layer) => (
-									<VolumeSlider
-										key={layer.id}
-										label={layer.name}
-										iconClassName={layer.icon}
-										value={activeVolumes[layer.id] ?? 0}
-										onChange={(e) => handleVolumeChange(layer.id, parseFloat(e.target.value))}
-										isEditing={isEditing}
-										onRemove={() => handleLayerRemove(layer.id)}
-									/>
-								))}
+								{activeTheme.id === CUSTOM_THEME_ID && !customThemeConfig.baseThemeId ? (
+									<div className="flex flex-col items-center justify-center h-full w-full">
+										<button 
+											onClick={() => setIsCustomEditorOpen(true)}
+											className="shine-hover flex flex-col items-center justify-center p-8 bg-white/5 backdrop-blur-md rounded-2xl hover:bg-white/15 transition-all duration-300 ring-1 ring-inset ring-white/20 hover:ring-white/30"
+										>
+											<PlusIcon className="w-12 h-12" />
+											<span className="mt-4 text-lg font-semibold">Add Sounds</span>
+										</button>
+									</div>
+								) : (
+									<>
+										<VolumeSlider
+											key="main-theme"
+											label={mainSliderInfo.label}
+											iconClassName={mainSliderInfo.icon}
+											value={mainThemeVolumes[activeThemeId] ?? 0.7}
+											onChange={(e) => handleMainVolumeChange(parseFloat(e.target.value))}
+										/>
+										{currentLayerSet.map((layer) => (
+											<VolumeSlider
+												key={layer.id}
+												label={layer.name}
+												iconClassName={layer.icon}
+												value={activeVolumes[layer.id] ?? 0}
+												onChange={(e) => handleVolumeChange(layer.id, parseFloat(e.target.value))}
+												isEditing={isEditing && activeThemeId !== CUSTOM_THEME_ID}
+												onRemove={() => handleLayerRemove(layer.id)}
+											/>
+										))}
+									</>
+								)}
 							</div>
 
-							{isEditing && (
+							{isEditing && activeThemeId !== CUSTOM_THEME_ID && (
 								<LayerEditor
 									activeThemeLayers={activeTheme.layers}
 									onAddLayer={handleLayerAdd}
@@ -335,6 +441,14 @@ const App: React.FC = () => {
 					</div>
 
 					<InfoModal isOpen={isInfoModalOpen} onClose={() => setIsInfoModalOpen(false)} />
+					<CustomThemeEditor
+						isOpen={isCustomEditorOpen}
+						onClose={() => setIsCustomEditorOpen(false)}
+						onSave={handleSaveCustomTheme}
+						currentConfig={customThemeConfig}
+						allBaseThemes={THEMES}
+						allLayers={ALL_SOUND_LAYERS}
+					/>
 
 					{/* Bottom-right controls: icon-only */}
 					<div className="fixed z-20 bottom-6 right-6 flex gap-4">

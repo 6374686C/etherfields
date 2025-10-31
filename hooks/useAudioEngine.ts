@@ -104,8 +104,14 @@ const createSilentAudioBuffer = (context: AudioContext, duration: number): Audio
 export const useAudioEngine = ({ themes, allLayers, initialThemeId, initialVolumes, initialMainVolume }: UseAudioEngineProps) => {
   const audioContextRef = useRef<AudioContext | null>(null);
   const masterGainRef = useRef<GainNode | null>(null);
-  const playersRef = useRef<Map<string, LoopingPlayer>>(new Map());
-  const audioBuffersRef = useRef<Map<string, AudioBuffer>>(new Map());
+  
+  // State for Layers (Web Audio API)
+  const layerPlayersRef = useRef<Map<string, LoopingPlayer>>(new Map());
+  const layerAudioBuffersRef = useRef<Map<string, AudioBuffer>>(new Map());
+  
+  // State for Themes (HTML5 Audio streaming via Web Audio API)
+  const themeAudioElementsRef = useRef<Map<string, HTMLAudioElement>>(new Map());
+  const themeGainNodesRef = useRef<Map<string, GainNode>>(new Map());
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -115,12 +121,23 @@ export const useAudioEngine = ({ themes, allLayers, initialThemeId, initialVolum
   const [currentVolumes, setCurrentVolumes] = useState(initialVolumes);
 
   const cleanupAudio = useCallback(() => {
-    playersRef.current.forEach(player => {
+    // Cleanup layers
+    layerPlayersRef.current.forEach(player => {
         player.stop();
         player.disconnect();
     });
-    playersRef.current.clear();
+    layerPlayersRef.current.clear();
+    layerAudioBuffersRef.current.clear();
 
+    // Cleanup themes
+    themeAudioElementsRef.current.forEach(audioEl => {
+        audioEl.pause();
+        audioEl.src = '';
+    });
+    themeAudioElementsRef.current.clear();
+    themeGainNodesRef.current.clear();
+
+    // Cleanup context
     if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
       audioContextRef.current.close().then(() => {
         setAudioState(AudioState.Closed);
@@ -141,19 +158,19 @@ export const useAudioEngine = ({ themes, allLayers, initialThemeId, initialVolum
     const fadeEndTime = currentTime + FADE_TIME;
 
     // Fade out old theme
-    const oldThemePlayer = playersRef.current.get(activeThemeId);
-    if (oldThemePlayer) {
-        oldThemePlayer.gain.cancelScheduledValues(currentTime);
-        oldThemePlayer.gain.setValueAtTime(oldThemePlayer.gain.value, currentTime);
-        oldThemePlayer.gain.linearRampToValueAtTime(0.0, fadeEndTime);
+    const oldThemeGain = themeGainNodesRef.current.get(activeThemeId);
+    if (oldThemeGain) {
+        oldThemeGain.gain.cancelScheduledValues(currentTime);
+        oldThemeGain.gain.setValueAtTime(oldThemeGain.gain.value, currentTime);
+        oldThemeGain.gain.linearRampToValueAtTime(0.0, fadeEndTime);
     }
     
     // Fade in new theme
-    const newThemePlayer = playersRef.current.get(themeId);
-    if (newThemePlayer) {
-        newThemePlayer.gain.cancelScheduledValues(currentTime);
-        newThemePlayer.gain.setValueAtTime(0.0, currentTime);
-        newThemePlayer.gain.linearRampToValueAtTime(targetVolume, fadeEndTime);
+    const newThemeGain = themeGainNodesRef.current.get(themeId);
+    if (newThemeGain) {
+        newThemeGain.gain.cancelScheduledValues(currentTime);
+        newThemeGain.gain.setValueAtTime(0.0, currentTime);
+        newThemeGain.gain.linearRampToValueAtTime(targetVolume, fadeEndTime);
     }
 
     setActiveThemeId(themeId);
@@ -180,47 +197,60 @@ export const useAudioEngine = ({ themes, allLayers, initialThemeId, initialVolum
         masterGain.connect(context.destination);
         masterGainRef.current = masterGain;
         
-        const allAudioAssets = [
-            ...themes.map(t => ({ id: t.id, name: t.name, audioSrc: t.audioSrc })),
-            ...allLayers
-        ];
+        // --- 1. Set up Themes for streaming ---
+        themes.forEach(theme => {
+            const audioEl = new Audio(theme.audioSrc);
+            audioEl.crossOrigin = "anonymous";
+            audioEl.loop = true;
+            themeAudioElementsRef.current.set(theme.id, audioEl);
+
+            const sourceNode = context.createMediaElementSource(audioEl);
+            const gainNode = context.createGain();
+            
+            const initialGain = theme.id === initialThemeId ? initialMainVolume : 0;
+            gainNode.gain.value = initialGain;
+
+            sourceNode.connect(gainNode).connect(masterGain);
+            themeGainNodesRef.current.set(theme.id, gainNode);
+        });
         
-        const loadPromises = allAudioAssets.map(asset => 
-            fetch(asset.audioSrc)
+        // --- 2. Load Layers into memory for seamless looping ---
+        const loadPromises = allLayers.map(layer => 
+            fetch(layer.audioSrc)
                 .then(response => {
                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                     return response.arrayBuffer();
                 })
                 .then(buffer => context.decodeAudioData(buffer))
                 .then(decodedData => {
-                    audioBuffersRef.current.set(asset.id, decodedData);
+                    layerAudioBuffersRef.current.set(layer.id, decodedData);
                 })
                 .catch(err => {
-                    console.warn(`Could not load or decode audio for "${asset.name}" from ${asset.audioSrc}. Using a silent placeholder. Error:`, err);
+                    console.warn(`Could not load or decode audio for "${layer.name}" from ${layer.audioSrc}. Using a silent placeholder. Error:`, err);
                     const silentBuffer = createSilentAudioBuffer(context, 2);
-                    audioBuffersRef.current.set(asset.id, silentBuffer);
+                    layerAudioBuffersRef.current.set(layer.id, silentBuffer);
                 })
         );
         
         await Promise.all(loadPromises);
-        
-        allAudioAssets.forEach(asset => {
-            const buffer = audioBuffersRef.current.get(asset.id);
+
+        // --- 3. Create Layer Players ---
+        allLayers.forEach(layer => {
+            const buffer = layerAudioBuffersRef.current.get(layer.id);
             if (!buffer) return;
 
-            const isTheme = themes.some(t => t.id === asset.id);
-            let initialGainValue = 0;
-            if (isTheme) {
-                initialGainValue = asset.id === initialThemeId ? initialMainVolume : 0;
-            } else {
-                initialGainValue = currentVolumes[asset.id] ?? 0;
-            }
-
+            const initialGainValue = currentVolumes[layer.id] ?? 0;
             const player = new LoopingPlayer(context, buffer, initialGainValue);
             player.connect(masterGain);
             player.start();
-            playersRef.current.set(asset.id, player);
+            layerPlayersRef.current.set(layer.id, player);
         });
+
+        // --- 4. Start Playback ---
+        // Start all theme audio elements. Only the active one has volume.
+        // FIX: Add explicit type annotation for 'el' to resolve a TypeScript inference issue.
+        const playPromises = Array.from(themeAudioElementsRef.current.values()).map((el: HTMLAudioElement) => el.play());
+        await Promise.all(playPromises).catch(e => console.warn("Some themes could not be autoplayed:", e));
 
         // Fade in master volume for a smooth start
         masterGain.gain.linearRampToValueAtTime(1.0, context.currentTime + FADE_TIME);
@@ -236,7 +266,7 @@ export const useAudioEngine = ({ themes, allLayers, initialThemeId, initialVolum
 
   const setLayerVolume = useCallback((layerId: string, volume: number, duration: number = 0.1) => {
     const context = audioContextRef.current;
-    const player = playersRef.current.get(layerId);
+    const player = layerPlayersRef.current.get(layerId);
     if (!context || !player) return;
 
     player.gain.cancelScheduledValues(context.currentTime);
@@ -245,14 +275,15 @@ export const useAudioEngine = ({ themes, allLayers, initialThemeId, initialVolum
     setCurrentVolumes(prev => ({ ...prev, [layerId]: volume }));
   }, []);
 
-  const setMainVolume = useCallback((volume: number, duration: number = 0.1) => {
+  const setMainVolume = useCallback((volume: number, duration: number = 0.1, themeIdToTarget?: string) => {
     const context = audioContextRef.current;
-    const player = playersRef.current.get(activeThemeId);
-    if (!context || !player) return;
+    const targetId = themeIdToTarget || activeThemeId;
+    const themeGain = themeGainNodesRef.current.get(targetId);
+    if (!context || !themeGain) return;
 
-    player.gain.cancelScheduledValues(context.currentTime);
-    player.gain.setValueAtTime(player.gain.value, context.currentTime);
-    player.gain.linearRampToValueAtTime(volume, context.currentTime + duration);
+    themeGain.gain.cancelScheduledValues(context.currentTime);
+    themeGain.gain.setValueAtTime(themeGain.gain.value, context.currentTime);
+    themeGain.gain.linearRampToValueAtTime(volume, context.currentTime + duration);
   }, [activeThemeId]);
 
 
@@ -270,6 +301,45 @@ export const useAudioEngine = ({ themes, allLayers, initialThemeId, initialVolum
     masterGain.gain.linearRampToValueAtTime(targetVolume, context.currentTime + FADE_TIME / 2);
 
   }, [isMuted]);
+
+  const resetAndPlayTheme = useCallback((newThemeAudioId: string, newLayers: string[], newMainVolume: number) => {
+    const context = audioContextRef.current;
+    const masterGain = masterGainRef.current;
+    if (!context || !masterGain) return;
+
+    const fadeOutDuration = 0.5;
+    const fadeInDuration = 1.5;
+
+    // 1. Fade out master volume to silence everything
+    masterGain.gain.cancelScheduledValues(context.currentTime);
+    masterGain.gain.setValueAtTime(masterGain.gain.value, context.currentTime);
+    masterGain.gain.linearRampToValueAtTime(0.0, context.currentTime + fadeOutDuration);
+
+    // 2. After fade out, reconfigure audio sources and then fade back in
+    setTimeout(() => {
+        if (context.state === 'closed') return;
+
+        // --- Reconfigure Themes ---
+        themeGainNodesRef.current.forEach((gainNode, themeId) => {
+            gainNode.gain.cancelScheduledValues(context.currentTime);
+            const targetVolume = themeId === newThemeAudioId ? newMainVolume : 0;
+            gainNode.gain.setValueAtTime(targetVolume, context.currentTime);
+        });
+        
+        // --- Reconfigure Layers ---
+        layerPlayersRef.current.forEach((player, layerId) => {
+            player.gain.cancelScheduledValues(context.currentTime);
+            const targetVolume = newLayers.includes(layerId) ? (currentVolumes[layerId] ?? 0.5) : 0;
+            player.gain.setValueAtTime(targetVolume, context.currentTime);
+        });
+
+        setActiveThemeId(newThemeAudioId);
+
+        // 3. Fade master volume back in
+        masterGain.gain.linearRampToValueAtTime(1.0, context.currentTime + fadeInDuration);
+
+    }, fadeOutDuration * 1000);
+  }, [currentVolumes]);
 
   useEffect(() => {
     return () => {
@@ -289,5 +359,6 @@ export const useAudioEngine = ({ themes, allLayers, initialThemeId, initialVolum
     setLayerVolume,
     setMainVolume,
     toggleMute,
+    resetAndPlayTheme,
   };
 };

@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Theme } from '../types';
 
@@ -51,7 +52,39 @@ const VantaBackground: React.FC<VantaBackgroundProps> = ({ activeTheme, volumes 
             switch(effectName) {
                 case 'WAVES': config = { mouseControls: true, touchControls: true, gyroControls: false, minHeight: 200.00, minWidth: 200.00, scale: 1.00, scaleMobile: 1.00, color: 0x1a0b3c, shininess: 30.00, waveHeight: 15.00, waveSpeed: 0.5, zoom: 0.8 }; break;
                 case 'CLOUDS': config = { mouseControls: true, touchControls: true, gyroControls: false, minHeight: 200.00, minWidth: 200.00, skyColor: 0x2d1a59, cloudColor: 0x8a7fb0, cloudShadowColor: 0x2b1e4a, sunColor: 0xe072b0, sunGlareColor: 0xff4dba, sunlightColor: 0xff61c4, speed: 0.5 }; break;
-                case 'HALO': config = { mouseControls: true, touchControls: true, gyroControls: false, minHeight: 200.00, minWidth: 200.00, amplitudeFactor: 1.0, xOffset: 0.05, yOffset: 0.05, size: 1.0, backgroundColor: 0x0c112a, baseColor: 0x3d82a7 }; break;
+                case 'HALO': 
+                    config = { mouseControls: true, touchControls: true, gyroControls: false, minHeight: 200.00, minWidth: 200.00, amplitudeFactor: 1.0, xOffset: 0.05, yOffset: 0.05, size: 1.0, backgroundColor: 0x0c112a, baseColor: 0x3d82a7 }; 
+                    break;
+                case 'CLOUDS2': 
+                    config = { 
+                        mouseControls: true, 
+                        touchControls: true, 
+                        gyroControls: false,
+                        skyColor: 0x68b8d7,
+                        cloudColor: 0xadc1d5,
+                        cloudShadowColor: 0x183550,
+                        sunColor: 0xff9919,
+                        sunGlareColor: 0xff6633,
+                        sunlightColor: 0xff9933,
+                        speed: 1.00
+                    }; 
+                    break;
+                case 'FOG':
+                    config = {
+                        mouseControls: true,
+                        touchControls: true,
+                        gyroControls: false,
+                        minHeight: 200.00,
+                        minWidth: 200.00,
+                        highlightColor: 0xc5c5c5,
+                        midtoneColor: 0x48556e,
+                        lowlightColor: 0x222633,
+                        baseColor: 0x1a1f29,
+                        blurFactor: 0.60,
+                        speed: 1.20,
+                        zoom: 0.80
+                    };
+                    break;
             }
 
             newEffect = window.VANTA[effectName]({ el: vantaRef.current, ...config });
@@ -61,7 +94,7 @@ const VantaBackground: React.FC<VantaBackgroundProps> = ({ activeTheme, volumes 
         return () => {
             if (newEffect) newEffect.destroy();
         };
-    }, [activeTheme.vantaEffect]);
+    }, [activeTheme.vantaEffect, activeTheme.id]);
 
 
     // Update Vanta effect based on volumes
@@ -94,6 +127,7 @@ const VantaBackground: React.FC<VantaBackgroundProps> = ({ activeTheme, volumes 
                 });
                 break;
             case 'HALO':
+                if (activeTheme.id === 'welcome-screen') break;
                 const finalHaloColor = interpolateColor(0x3d82a7, 0x6eb1d1, birds);
                 vantaEffect.setOptions({
                     amplitudeFactor: 1.0 + birds * 2.0 + bubbles * 1.0,
@@ -102,6 +136,10 @@ const VantaBackground: React.FC<VantaBackgroundProps> = ({ activeTheme, volumes 
                     size: 1.0 + whales * 0.75 - bubbles * 0.3,
                     baseColor: finalHaloColor
                 });
+                break;
+            case 'CLOUDS2':
+            case 'FOG':
+                // Do nothing to keep original colors
                 break;
         }
     }, [volumes, vantaEffect, activeTheme]);

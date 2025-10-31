@@ -25,9 +25,9 @@ export const THEMES: Theme[] = [
     name: 'Dark Drone',
     audioSrc: `${AUDIO_BASE_URL}/audio/themes/dark_drone.mp3`,
     vantaEffect: 'WAVES',
-    layers: ['thunder', 'rain', 'planets', 'space_debris', 'nasa_chatter'],
+    layers: ['planets', 'space_debris', 'nasa_chatter'],
     defaultThemeVolume: 0.7,
-    defaultVolumes: { thunder: 0, rain: 0, planets: 0.3, space_debris: 0.45, nasa_chatter: 0.2 },
+    defaultVolumes: { planets: 0.3, space_debris: 0.45, nasa_chatter: 0.2 },
   },
   {
     id: 'floating-dreaming',
@@ -43,9 +43,9 @@ export const THEMES: Theme[] = [
     name: 'Focus / Meditation',
     audioSrc: `${AUDIO_BASE_URL}/audio/themes/focus_meditation.mp3`,
     vantaEffect: 'HALO',
-    layers: ['thunder', 'rain', 'birds', 'whales', 'bubbles'],
+    layers: ['whales', 'bubbles'],
     defaultThemeVolume: 0.7,
-    defaultVolumes: { thunder: 0, rain: 0, birds: 0.3, whales: 0.5, bubbles: 0.7 },
+    defaultVolumes: { whales: 0.5, bubbles: 0.7 },
   },
 ];
 
