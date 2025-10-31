@@ -13,9 +13,9 @@ import { SparklesIcon, EditIcon, EyeIcon, EyeSlashIcon, InfoIcon, PlusIcon } fro
 
 // ---- Subtitles here (edit freely) ----
 const THEME_SUBTITLES: Record<string, string> = {
-	'dark-drone': 'Dark drone ambient: deep engines, space hum, and distant planets',
-	'floating-dreaming': 'Soft, airy ambience for relaxing, sleeping, or winding down',
-	'focus-meditation': 'Minimal, steady textures that help you settle into deep focus'
+	'dark-drone': 'Immersive dark ambience: resonant engines, cosmic hums, and drifting worlds',
+	'floating-dreaming': 'Ethereal soundscape: gentle waves of air and light to drift, dream, and unwind',
+	'focus-meditation': 'Calm tonal flow: minimal textures and slow pulses to deepen focus and stillness'
 };
 // --------------------------------------
 
@@ -55,11 +55,11 @@ const App: React.FC = () => {
 	});
 
 	const [activeThemeId, setActiveThemeId] = useState<string>(() =>
-		getInitialState('etherfields_active_theme_id', 'focus-meditation') // Default to Focus theme
+		getInitialState('etherfields_active_theme_id', 'dark-drone') // Default to Dark Drone theme
 	);
 	
-	const [customThemeConfig, setCustomThemeConfig] = useState<{ baseThemeId: string | null; layers: string[] }>(() =>
-		getInitialState('etherfields_custom_config', { baseThemeId: null, layers: [] })
+	const [customThemeConfig, setCustomThemeConfig] = useState<{ baseThemeId: string | null; layers: string[]; vantaEffect: Theme['vantaEffect'] }>(() =>
+		getInitialState('etherfields_custom_config', { baseThemeId: null, layers: [], vantaEffect: 'FOG' })
 	);
 
 	const [mainThemeVolumes, setMainThemeVolumes] = useState<Record<string, number>>(() => {
@@ -88,7 +88,7 @@ const App: React.FC = () => {
                 id: CUSTOM_THEME_ID,
                 name: 'Custom',
                 audioSrc: baseTheme.audioSrc,
-                vantaEffect: 'FOG',
+                vantaEffect: customThemeConfig.vantaEffect,
                 layers: customThemeConfig.layers,
                 defaultThemeVolume: 0.7,
                 defaultVolumes: {},
@@ -269,18 +269,34 @@ const App: React.FC = () => {
 		});
 	}, [activeThemeId, customThemes, setLayerVolume, setMainVolume]);
 
-	const handleSaveCustomTheme = useCallback((config: { baseThemeId: string | null; layers: string[] }) => {
+	const handleSaveCustomTheme = useCallback((config: { 
+		baseThemeId: string | null; 
+		layers: string[]; 
+		vantaEffect: Theme['vantaEffect'],
+		volumes: Record<string, number>;
+	}) => {
 		if (!config.baseThemeId) return;
+
+		// 1. Persist the new volumes for the custom theme UI
+		setThemeVolumes(prev => ({
+			...prev,
+			[CUSTOM_THEME_ID]: config.volumes,
+		}));
 	
-		// 1. Call the new atomic "stop-then-start" audio function
+		// 2. Call the atomic "stop-then-start" audio function with new volumes
 		resetAndPlayTheme(
 			config.baseThemeId,
 			config.layers,
-			mainThemeVolumes[CUSTOM_THEME_ID] ?? 0.7
+			mainThemeVolumes[CUSTOM_THEME_ID] ?? 0.7,
+			config.volumes
 		);
 	
-		// 2. Update React state to match the new audio state
-		setCustomThemeConfig(config);
+		// 3. Update React state to match the new audio state
+		setCustomThemeConfig({
+			baseThemeId: config.baseThemeId,
+			layers: config.layers,
+			vantaEffect: config.vantaEffect,
+		});
 		setActiveThemeId(CUSTOM_THEME_ID);
 	
 	}, [resetAndPlayTheme, mainThemeVolumes]);
@@ -310,7 +326,8 @@ const App: React.FC = () => {
 	const themeFontClasses: Record<string, string> = {
 		'dark-drone': 'font-orbitron',
 		'floating-dreaming': 'font-dancing-script',
-		'focus-meditation': 'font-josefin-sans'
+		'focus-meditation': 'font-josefin-sans',
+		[CUSTOM_THEME_ID]: 'font-poppins'
 	};
 	const fontClass = themeFontClasses[activeTheme.id] || 'font-josefin-sans';
 	
@@ -321,11 +338,11 @@ const App: React.FC = () => {
                 // 'Floating / Dreaming' -> 'Floating'
                 // 'Dark Drone' -> 'Dark'
                 const shortName = base.name.split(' / ')[0].split(' ')[0];
-                return { label: shortName, icon: 'fa-solid fa-wave-square' };
+                return { label: shortName, icon: 'fa-solid fa-music' };
             }
-			return { label: 'Music', icon: 'fa-solid fa-wave-square' };
+			return { label: 'Music', icon: 'fa-solid fa-music' };
 		}
-		return { label: 'Music', icon: 'fa-solid fa-wave-square' };
+		return { label: 'Music', icon: 'fa-solid fa-music' };
 	}, [activeThemeId, customThemeConfig.baseThemeId]);
 
 	return (
@@ -385,11 +402,11 @@ const App: React.FC = () => {
 							</div>
 
 							<header className="text-center mb-8">
-								<h1 className={`text-4xl md:text-5xl font-bold tracking-wider transition-all duration-500 ease-in-out ${fontClass} glow`}>
+								<h1 className={`text-4xl md:text-5xl font-normal tracking-tighter transition-all duration-500 ease-in-out ${fontClass} glow`}>
 									{activeTheme.name.split('/')[0]}
 								</h1>
 								<p className="text-white mt-4 text-sm">
-									{THEME_SUBTITLES[activeTheme.id] ?? 'Your personalized soundscape.'}
+									{THEME_SUBTITLES[activeTheme.id] ?? 'Shape your own ambient world: blend tones, textures, and nature into a realm uniquely yours'}
 								</p>
 							</header>
 
@@ -443,14 +460,14 @@ const App: React.FC = () => {
 					</div>
 
 					<InfoModal isOpen={isInfoModalOpen} onClose={() => setIsInfoModalOpen(false)} />
-					<CustomThemeEditor
-						isOpen={isCustomEditorOpen}
+					{isCustomEditorOpen && <CustomThemeEditor
 						onClose={() => setIsCustomEditorOpen(false)}
 						onSave={handleSaveCustomTheme}
 						currentConfig={customThemeConfig}
+						currentVolumes={themeVolumes[CUSTOM_THEME_ID] || {}}
 						allBaseThemes={THEMES}
 						allLayers={ALL_SOUND_LAYERS}
-					/>
+					/>}
 
 					{/* Bottom-right controls: icon-only */}
 					<div className="fixed z-20 bottom-6 right-6 flex gap-4">

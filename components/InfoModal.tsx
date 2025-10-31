@@ -47,12 +47,20 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose }) => {
 
 				<div className="space-y-4">
 					<div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
-						<span className="font-semibold text-gray-200">Version</span>
-						<span className="text-gray-400">1.0.5</span>
+						<span className="font-semibold text-gray-200">Follow on YouTube</span>
+						<a
+							href="https://www.youtube.com/@etherfields_app"
+							target="_blank"
+							rel="noopener noreferrer"
+							className="shine-hover flex items-center gap-2 px-3 py-1.5 text-sm font-semibold bg-white/5 backdrop-blur-md text-white rounded-lg hover:bg-white/15 transition-colors ring-1 ring-inset ring-white/20 hover:ring-white/30"
+						>
+							<i className="fa-brands fa-youtube text-red-500 text-lg"></i>
+							<span>Follow</span>
+						</a>
 					</div>
 					{/* Ko-fi row */}
 					<div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
-						<span className="font-semibold text-gray-200">Support</span>
+						<span className="font-semibold text-gray-200">Support Me</span>
 						<a
 							href="https://ko-fi.com/K3K019YFF8"
 							target="_blank"
@@ -77,6 +85,10 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose }) => {
 						>
 							hello[at]unableton.com
 						</a>
+					</div>
+					<div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+						<span className="font-semibold text-gray-200">Version</span>
+						<span className="text-gray-400">1.0.5</span>
 					</div>
 				</div>
 

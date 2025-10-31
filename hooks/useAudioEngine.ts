@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Theme, SoundLayer } from '../types';
-import { FADE_TIME } from '../constants';
+import { FADE_TIME, ALL_SOUND_LAYERS } from '../constants';
 
 export enum AudioState {
   Suspended,
@@ -302,44 +302,51 @@ export const useAudioEngine = ({ themes, allLayers, initialThemeId, initialVolum
 
   }, [isMuted]);
 
-  const resetAndPlayTheme = useCallback((newThemeAudioId: string, newLayers: string[], newMainVolume: number) => {
-    const context = audioContextRef.current;
-    const masterGain = masterGainRef.current;
-    if (!context || !masterGain) return;
+	const resetAndPlayTheme = useCallback((
+		newThemeAudioId: string, 
+		newLayers: string[], 
+		newMainVolume: number, 
+		newLayerVolumes: Record<string, number>
+	) => {
+		const context = audioContextRef.current;
+		const masterGain = masterGainRef.current;
+		if (!context || !masterGain) return;
 
-    const fadeOutDuration = 0.5;
-    const fadeInDuration = 1.5;
+		const fadeOutDuration = 0.5;
+		const fadeInDuration = 1.5;
 
-    // 1. Fade out master volume to silence everything
-    masterGain.gain.cancelScheduledValues(context.currentTime);
-    masterGain.gain.setValueAtTime(masterGain.gain.value, context.currentTime);
-    masterGain.gain.linearRampToValueAtTime(0.0, context.currentTime + fadeOutDuration);
+		// 1. Fade out master volume to silence everything
+		masterGain.gain.cancelScheduledValues(context.currentTime);
+		masterGain.gain.setValueAtTime(masterGain.gain.value, context.currentTime);
+		masterGain.gain.linearRampToValueAtTime(0.0, context.currentTime + fadeOutDuration);
 
-    // 2. After fade out, reconfigure audio sources and then fade back in
-    setTimeout(() => {
-        if (context.state === 'closed') return;
+		// 2. After fade out, reconfigure audio sources and then fade back in
+		setTimeout(() => {
+			if (context.state === 'closed') return;
 
-        // --- Reconfigure Themes ---
-        themeGainNodesRef.current.forEach((gainNode, themeId) => {
-            gainNode.gain.cancelScheduledValues(context.currentTime);
-            const targetVolume = themeId === newThemeAudioId ? newMainVolume : 0;
-            gainNode.gain.setValueAtTime(targetVolume, context.currentTime);
-        });
-        
-        // --- Reconfigure Layers ---
-        layerPlayersRef.current.forEach((player, layerId) => {
-            player.gain.cancelScheduledValues(context.currentTime);
-            const targetVolume = newLayers.includes(layerId) ? (currentVolumes[layerId] ?? 0.5) : 0;
-            player.gain.setValueAtTime(targetVolume, context.currentTime);
-        });
+			// --- Reconfigure Themes ---
+			themeGainNodesRef.current.forEach((gainNode, themeId) => {
+				gainNode.gain.cancelScheduledValues(context.currentTime);
+				const targetVolume = themeId === newThemeAudioId ? newMainVolume : 0;
+				gainNode.gain.setValueAtTime(targetVolume, context.currentTime);
+			});
+			
+			// --- Reconfigure Layers ---
+			layerPlayersRef.current.forEach((player, layerId) => {
+				player.gain.cancelScheduledValues(context.currentTime);
+				const targetVolume = newLayers.includes(layerId) ? (newLayerVolumes[layerId] ?? 0.5) : 0;
+				player.gain.setValueAtTime(targetVolume, context.currentTime);
+			});
+			
+			// Update internal state to match new reality
+			setCurrentVolumes(prev => ({ ...prev, ...newLayerVolumes }));
+			setActiveThemeId(newThemeAudioId);
 
-        setActiveThemeId(newThemeAudioId);
+			// 3. Fade master volume back in
+			masterGain.gain.linearRampToValueAtTime(1.0, context.currentTime + fadeInDuration);
 
-        // 3. Fade master volume back in
-        masterGain.gain.linearRampToValueAtTime(1.0, context.currentTime + fadeInDuration);
-
-    }, fadeOutDuration * 1000);
-  }, [currentVolumes]);
+		}, fadeOutDuration * 1000);
+	}, []);
 
   useEffect(() => {
     return () => {
