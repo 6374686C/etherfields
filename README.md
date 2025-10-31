@@ -1,20 +1,26 @@
 <div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+  <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+# 🌌 Etherfields
 
-This contains everything you need to run your app locally.
+**Etherfields** is an interactive web app for crafting endless ambient soundscapes.  
+Blend atmospheric themes, layer environmental sounds, and create evolving sonic worlds — all within a minimalist interface.
 
-View your app in AI Studio: https://ai.studio/apps/temp/1
+🎧 **Features**
+- Three handcrafted ambient themes: *Dark Drone*, *Floating*, and *Focus Meditation*  
+- Multiple environmental layers including rain, thunder, forest, campfire, and ocean  
+- Immersive **3D binaural audio** for depth and spatial realism  
+- Real-time volume control and seamless crossfades  
+- Persistent session memory — your mix stays just as you left it  
+- A **“Realmcraft”** mode for building your own unique ambient realm  
 
-## Run Locally
+🪐 **Experience**
+A space for relaxation, focus, and creativity — designed to evolve with your mood.  
+Each blend is a living composition, shifting and breathing endlessly in the background.
 
-**Prerequisites:**  Node.js
+🎧 **Best experienced with headphones** — feel the subtle motion of space, distance, and presence within every layer.
 
+---
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+*Created with modern web technologies, vibe coding, immersive 3D sound design, and a love for ambient atmospheres.*
