@@ -1,22 +1,24 @@
 # 🌌 Etherfields
 
-**Etherfields** is an interactive web app for crafting endless ambient soundscapes.  
-Blend atmospheric themes, layer environmental sounds, and create evolving sonic worlds — all within a minimalist interface.
+**Etherfields** is a small web experiment about atmosphere and mood.  
+It lets you shape endless ambient worlds — mixing drones, nature, and subtle textures until it feels right.
 
 🎧 **Features**
-- Three handcrafted ambient themes: *Dark Drone*, *Floating*, and *Focus Meditation*  
-- Multiple environmental layers including rain, thunder, forest, campfire, and ocean  
-- Immersive **3D binaural audio** for depth and spatial realism  
-- Real-time volume control and seamless crossfades  
-- Persistent session memory — your mix stays just as you left it  
-- A **“Realmcraft”** mode for building your own unique ambient realm  
+- Three core themes: *Dark Drone*, *Floating*, and *Focus Meditation*  
+- Natural layers like rain, thunder, forest, campfire, and ocean  
+- Spatial **3D binaural sound** that gives every tone its own space and depth  
+- Smooth real-time volume control and fading between layers  
+- Remembers your mix when you come back  
+- A **Realmcraft** mode where you can build your own world from silence  
 
 🪐 **Experience**
-A space for relaxation, focus, and creativity — designed to evolve with your mood.  
-Each blend is a living composition, shifting and breathing endlessly in the background.
+Etherfields isn’t a playlist — it’s a space.  
+Something to have open while you work, think, or drift off.  
+The sound slowly moves around you, changing just enough to stay alive.
 
-🎧 **Best experienced with headphones** — feel the subtle motion of space, distance, and presence within every layer.
+🎧 **Headphones recommended.**  
+They reveal the small shifts in space and the movement between layers.
 
 ---
 
-*Created with modern web technologies, vibe coding, immersive 3D sound design, and a love for ambient atmospheres.*
+*Built with care, curiosity, and a love for sound that never really ends.*
