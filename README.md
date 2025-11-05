@@ -1,20 +1,24 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# 🌌 Etherfields
 
-# Run and deploy your AI Studio app
+**Etherfields** is a small web experiment about atmosphere and mood.  
+It lets you shape endless ambient worlds — mixing drones, nature, and subtle textures until it feels right.
 
-This contains everything you need to run your app locally.
+🎧 **Features**
+- Three core themes: *Dark Drone*, *Floating*, and *Focus Meditation*  
+- Natural layers like rain, thunder, forest, campfire, and ocean  
+- Spatial **3D binaural sound** that gives every tone its own space and depth  
+- Smooth real-time volume control and fading between layers  
+- Remembers your mix when you come back  
+- A **Realmcraft** mode where you can build your own world from silence  
 
-View your app in AI Studio: https://ai.studio/apps/temp/1
+🪐 **Experience**
+Etherfields isn’t a playlist — it’s a space.  
+Something to have open while you work, think, or drift off.  
+The sound slowly moves around you, changing just enough to stay alive.
 
-## Run Locally
+🎧 **Headphones recommended.**  
+They reveal the small shifts in space and the movement between layers.
 
-**Prerequisites:**  Node.js
+---
 
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+*Built with care, curiosity, and a love for sound that never really ends.*
