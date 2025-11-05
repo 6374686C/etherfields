@@ -52,8 +52,8 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose }) => {
 				onClick={(e) => e.stopPropagation()}
 			>
                 <div className="relative text-center mb-4">
-                    <h2 className="text-2xl font-bold blur-text-container font-josefin-sans">
-						{'About Etherfields'.split('').map((char, index) => (
+                    <h2 className="text-3xl font-bold blur-text-container font-josefin-sans">
+						{'Etherfields'.split('').map((char, index) => (
 							<span key={index}>{char === ' ' ? '\u00A0' : char}</span>
 						))}
 					</h2>
@@ -68,7 +68,7 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose }) => {
                     </button>
                 </div>
 				
-                <div className="flex justify-center my-8">
+                <div className="flex justify-center my-10">
                     <div className="relative w-36 h-36 flex items-center justify-center">
                         {/* Glow Elements for a cinematic "chromatic blob" effect */}
                         {/* A soft, larger, pulsing base glow */}
