@@ -115,6 +115,7 @@ const App: React.FC = () => {
 		isInitialized,
 		isLoading,
 		isMuted,
+		currentVolumes,
 		initializeAudio,
 		selectTheme,
 		setLayerVolume,
@@ -393,7 +394,8 @@ const App: React.FC = () => {
 			{showUpdate && isInitialized && <UpdateNotification onUpdate={handleUpdate} />}
 			<VantaBackground 
 				activeTheme={isInitialized ? activeTheme : preInitTheme} 
-				volumes={isInitialized ? activeVolumes : {}} 
+				// FIX: The prop 'volumes' does not exist on VantaBackground. It should be 'currentVolumes'.
+				currentVolumes={isInitialized ? currentVolumes : {}} 
 			/>
 
 			{!isInitialized ? (
@@ -491,7 +493,7 @@ const App: React.FC = () => {
                                                     key={layer.id}
                                                     label={layer.name}
                                                     iconClassName={layer.icon}
-                                                    value={activeVolumes[layer.id] ?? 0}
+                                                    value={currentVolumes[layer.id] ?? 0}
                                                     onChange={(e) => handleVolumeChange(layer.id, parseFloat(e.target.value))}
                                                     isEditing={isEditing && activeThemeId !== CUSTOM_THEME_ID}
                                                     onRemove={() => handleLayerRemove(layer.id)}

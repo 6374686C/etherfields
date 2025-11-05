@@ -12,7 +12,7 @@ declare global {
 
 interface VantaBackgroundProps {
     activeTheme: Theme;
-    volumes: Record<string, number>;
+    currentVolumes: Record<string, number>;
 }
 
 // Helper function to interpolate between two hex colors
@@ -32,7 +32,7 @@ const interpolateColor = (color1: number, color2: number, factor: number) => {
     return (r << 16) + (g << 8) + b;
 };
 
-const VantaBackground: React.FC<VantaBackgroundProps> = ({ activeTheme, volumes }) => {
+const VantaBackground: React.FC<VantaBackgroundProps> = ({ activeTheme, currentVolumes }) => {
     const [vantaEffect, setVantaEffect] = useState<any>(null);
     const vantaRef = useRef<HTMLDivElement>(null);
 
@@ -101,7 +101,7 @@ const VantaBackground: React.FC<VantaBackgroundProps> = ({ activeTheme, volumes 
     useEffect(() => {
         if (!vantaEffect || !activeTheme) return;
 
-        const { thunder = 0, rain = 0, forest = 0, campfire = 0, planets = 0, space_debris = 0, nasa_chatter = 0, wind_chimes = 0, crickets = 0, birds = 0, whales = 0, bubbles = 0 } = volumes;
+        const { thunder = 0, rain = 0, forest = 0, campfire = 0, planets = 0, space_debris = 0, nasa_chatter = 0, wind_chimes = 0, crickets = 0, birds = 0, whales = 0, bubbles = 0 } = currentVolumes;
 
         switch (activeTheme.vantaEffect) {
             case 'WAVES':
@@ -142,7 +142,7 @@ const VantaBackground: React.FC<VantaBackgroundProps> = ({ activeTheme, volumes 
                 // Do nothing to keep original colors
                 break;
         }
-    }, [volumes, vantaEffect, activeTheme]);
+    }, [currentVolumes, vantaEffect, activeTheme]);
 
 
     return (

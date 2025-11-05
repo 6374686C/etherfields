@@ -1,63 +1,76 @@
 @echo off
-cd /d "%~dp0"
+title Deploy to GitHub
+cls
+color 0A
 
-echo.
-echo ===============================
-echo   Web App Build & Push Tool
-echo ===============================
-echo.
+setlocal enabledelayedexpansion
 
-REM Check if we're in a Git repo
-git rev-parse --is-inside-work-tree >nul 2>&1
-if errorlevel 1 (
-    echo This folder is not a Git repository!
-    pause
-    exit /b
+:: ----------------------------------------
+:: Read current version from constants.ts
+:: ----------------------------------------
+for /f "tokens=3 delims= " %%A in ('findstr "APP_VERSION" constants.ts') do (
+    set "VERSION_RAW=%%A"
+)
+set "VERSION_RAW=!VERSION_RAW:'=!"
+set "VERSION_RAW=!VERSION_RAW:;=!"
+set "VERSION_RAW=!VERSION_RAW:~=!"
+set "CURRENT_VERSION=!VERSION_RAW!"
+echo ----------------------------------------
+echo 📦 Current version: !CURRENT_VERSION!
+echo ----------------------------------------
+
+:: ----------------------------------------
+:: Ask if user wants to update version
+:: ----------------------------------------
+set /p "CHOICE=Do you want to update the version? [Y/n]: "
+if /i "%CHOICE%"=="" set "CHOICE=Y"
+
+if /i "%CHOICE%"=="Y" (
+    set /p "NEW_VERSION=Enter new version number (e.g. 1.0.9): "
+    if not "%NEW_VERSION%"=="" (
+        powershell -Command "(Get-Content 'constants.ts') -replace 'APP_VERSION = ''.*'';', 'APP_VERSION = ''%NEW_VERSION%'';' | Set-Content 'constants.ts'"
+        echo ✅ Version updated to %NEW_VERSION%
+    ) else (
+        echo ⚠️  No version entered, keeping %CURRENT_VERSION%.
+    )
+) else (
+    echo 🔹 Version unchanged.
 )
 
-echo.
-echo Installing dependencies...
-call npm install
-if errorlevel 1 (
-    echo.
-    echo !!! npm install failed !!!
-    pause
-    exit /b
-)
+:: ----------------------------------------
+:: Install & build
+:: ----------------------------------------
+echo ----------------------------------------
+echo 🔧 Installing dependencies...
+echo ----------------------------------------
+npm install
 
-echo.
-echo Building project...
-call npm run build
-if errorlevel 1 (
-    echo.
-    echo !!! Build failed !!!
-    pause
-    exit /b
-)
+echo ----------------------------------------
+echo 🏗️ Building project...
+echo ----------------------------------------
+npm run build
 
-echo.
-echo Adding all changes...
+:: ----------------------------------------
+:: Git add, commit and push
+:: ----------------------------------------
 git add .
-
-echo.
-echo Current status:
 git status
 
-echo.
-set /p commit_msg=Enter commit message: 
+echo ----------------------------------------
+echo 📝 Enter your commit message below.
+echo (Press Ctrl+Z then Enter when done)
+echo ----------------------------------------
+set "TEMPFILE=%temp%\commitmsg.txt"
+type nul > "%TEMPFILE%"
+copy con "%TEMPFILE%"
+git commit -F "%TEMPFILE%"
+del "%TEMPFILE%"
 
-if "%commit_msg%"=="" (
-    set commit_msg=Auto commit
-)
+echo ----------------------------------------
+echo 📤 Pushing to GitHub...
+echo ----------------------------------------
+git push origin main
 
-echo.
-echo Committing with message: "%commit_msg%"
-git commit -m "%commit_msg%"
-
-echo.
-echo Pushing to remote...
-git push
-
-echo.
-echo Done!
+echo ✅ Deployment complete!
 pause
+endlocal
