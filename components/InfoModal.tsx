@@ -52,7 +52,11 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose }) => {
 				onClick={(e) => e.stopPropagation()}
 			>
                 <div className="relative text-center mb-4">
-                    <h2 className="text-2xl font-bold">About Etherfields</h2>
+                    <h2 className="text-2xl font-bold blur-text-container font-josefin-sans">
+						{'About Etherfields'.split('').map((char, index) => (
+							<span key={index}>{char === ' ' ? '\u00A0' : char}</span>
+						))}
+					</h2>
                     <button
                         onClick={onClose}
                         className="absolute top-1/2 right-0 transform -translate-y-1/2 p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
