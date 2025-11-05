@@ -69,36 +69,27 @@
   .slider-container::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
   .slider-container::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); }
 
-  /* New Cinematic Shine Animation - Clipped to Text */
-  .cinematic-shine {
-    /* The gradient creates a subtle moving highlight */
-    background: linear-gradient(
-      -75deg, 
-      #e8e8e8 40%, 
-      #ffffff 50%, 
-      #e8e8e8 60%
-    );
-    background-size: 200% auto;
-
-    /* Animate the background position to create the shine effect */
-    animation: shineAnimation 5s infinite linear;
-
-    /* Use the text as a mask for the background */
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+  /* New Text Blur Animation */
+  .blur-text-container span {
+    display: inline-block;
+    filter: blur(0px); /* Initial state */
+    animation: blur-text 1.5s infinite linear alternate;
   }
-
-  @keyframes shineAnimation {
-    0% {
-      background-position: 200% center;
-    }
-    40% {
-      background-position: -200% center;
-    }
-    100% {
-      background-position: -200% center;
-    }
+  .blur-text-container span:nth-child(1) { animation-delay: 0.0s; }
+  .blur-text-container span:nth-child(2) { animation-delay: 0.2s; }
+  .blur-text-container span:nth-child(3) { animation-delay: 0.4s; }
+  .blur-text-container span:nth-child(4) { animation-delay: 0.6s; }
+  .blur-text-container span:nth-child(5) { animation-delay: 0.8s; }
+  .blur-text-container span:nth-child(6) { animation-delay: 1.0s; }
+  .blur-text-container span:nth-child(7) { animation-delay: 1.2s; }
+  .blur-text-container span:nth-child(8) { animation-delay: 1.4s; }
+  .blur-text-container span:nth-child(9) { animation-delay: 1.6s; }
+  .blur-text-container span:nth-child(10) { animation-delay: 1.8s; }
+  .blur-text-container span:nth-child(11) { animation-delay: 2.0s; }
+  
+  @keyframes blur-text {
+    from { filter: blur(0px); }
+    to { filter: blur(4px); }
   }
 </style>
 <link rel="stylesheet" href="/index.css">

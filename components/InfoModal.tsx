@@ -88,7 +88,7 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose }) => {
 					</div>
 					<div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
 						<span className="font-semibold text-gray-200">Version</span>
-						<span className="text-gray-400">1.0.5</span>
+						<span className="text-gray-400">1.2.0</span>
 					</div>
 				</div>
 

@@ -355,7 +355,11 @@ const App: React.FC = () => {
 			{!isInitialized ? (
 				<>
 					<div className="relative z-10 flex flex-col items-center text-center">
-						<h1 className="cinematic-shine text-5xl md:text-7xl font-bold tracking-tight mb-4 font-josefin-sans">Etherfields</h1>
+						<h1 className="blur-text-container text-5xl md:text-7xl font-bold tracking-widest mb-4 font-josefin-sans pt-4">
+							{'Etherfields'.split('').map((char, index) => (
+								<span key={index}>{char}</span>
+							))}
+						</h1>
 						<p className="text-sm md:text-base text-white mb-8 max-w-lg">
 							Create your own immersive soundscape. Click below to begin.
 						</p>

@@ -92,8 +92,7 @@ const VolumeSlider: React.FC<VolumeSliderProps> = ({
 					value={value}
 					onInput={handleInput}
 					onChange={handleInput}
-					className="absolute inset-0 w-full h-full opacity-0 cursor-pointer [appearance:none] bg-transparent"
-					style={{ WebkitAppearance: 'slider-vertical' } as React.CSSProperties}
+					className="vertical-slider absolute inset-0 w-full h-full opacity-0 cursor-pointer bg-transparent"
 				/>
 			</div>
 
@@ -102,24 +101,33 @@ const VolumeSlider: React.FC<VolumeSliderProps> = ({
 			</label>
 
 			<style>{`
+				.vertical-slider {
+					/* Standard way to make a slider vertical */
+					writing-mode: vertical-lr;
+					/* Legacy WebKit way */
+					-webkit-appearance: slider-vertical;
+					/* Invert slider direction to have max at top */
+					transform: rotate(180deg);
+				}
+				
 				/* kill native grey tracks */
-				input[type=range][style*="slider-vertical"]::-webkit-slider-runnable-track {
+				input[type=range].vertical-slider::-webkit-slider-runnable-track {
 					background: transparent !important;
 					border: none !important;
 				}
-				input[type=range][style*="slider-vertical"]::-moz-range-track {
+				input[type=range].vertical-slider::-moz-range-track {
 					background: transparent !important;
 					border: none !important;
 				}
 
 				/* we don't want the browser thumb, we draw our own */
-				input[type=range][style*="slider-vertical"]::-webkit-slider-thumb {
+				input[type=range].vertical-slider::-webkit-slider-thumb {
 					-webkit-appearance: none;
 					appearance: none;
 					width: 0;
 					height: 0;
 				}
-				input[type=range][style*="slider-vertical"]::-moz-range-thumb {
+				input[type=range].vertical-slider::-moz-range-thumb {
 					width: 0;
 					height: 0;
 					border: none;
