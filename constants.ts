@@ -1,8 +1,10 @@
 import { Theme, SoundLayer } from './types';
 
-export const APP_VERSION = '1.0.9';
+export const APP_VERSION = '1.1.0';
 
 const AUDIO_BASE_URL = 'https://6374686c.github.io/etherfields';
+
+export const LOGO_URL = `${AUDIO_BASE_URL}/resources/images/etherfields_logo.png`;
 
 export const ALL_SOUND_LAYERS: SoundLayer[] = [
   { id: 'thunder', name: 'Thunder', audioSrc: `${AUDIO_BASE_URL}/audio/layers/thunder.mp3`, icon: 'fa-solid fa-cloud-bolt' },

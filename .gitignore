@@ -22,9 +22,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
-# Local tools and scripts
-deploy.bat
-deploy.py
-*.sh
-*.cmd
