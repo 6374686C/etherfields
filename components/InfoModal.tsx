@@ -22,10 +22,33 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose }) => {
 
 				@keyframes scale-in { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 				.animate-scale-in { animation: scale-in 0.3s ease-out forwards; }
+
+                /* New "Chromatic Blob" glow animations */
+                @keyframes pulse-glow {
+                    0%, 100% { transform: scale(1); opacity: 0.5; }
+                    50% { transform: scale(1.15); opacity: 0.3; }
+                }
+                @keyframes chromatic-shift-1 {
+                    0%   { transform: translate(6px, -4px) scale(1.0); }
+                    25%  { transform: translate(-5px, 5px) scale(0.95); }
+                    50%  { transform: translate(4px, 6px) scale(1.05); }
+                    75%  { transform: translate(-5px, -5px) scale(1.0); }
+                    100% { transform: translate(6px, -4px) scale(1.0); }
+                }
+                @keyframes chromatic-shift-2 {
+                    0%   { transform: translate(-6px, 4px) scale(1.05); }
+                    25%  { transform: translate(5px, -5px) scale(1.0); }
+                    50%  { transform: translate(-4px, -6px) scale(0.95); }
+                    75%  { transform: translate(5px, 5px) scale(1.0); }
+                    100% { transform: translate(-6px, 4px) scale(1.05); }
+                }
+                .animate-pulse-glow { animation: pulse-glow 12s infinite ease-in-out; }
+                .animate-chromatic-shift-1 { animation: chromatic-shift-1 8s infinite ease-in-out; }
+                .animate-chromatic-shift-2 { animation: chromatic-shift-2 10s infinite ease-in-out alternate; }
 			`}</style>
 
 			<div
-				className="relative w-full max-w-xl p-6 sm:p-8 mx-4 bg-[#10121a] border border-white/10 rounded-2xl shadow-2xl text-white animate-scale-in"
+				className="relative w-full max-w-2xl p-6 sm:p-8 mx-4 bg-[#10121a] border border-white/10 rounded-2xl shadow-2xl text-white animate-scale-in"
 				onClick={(e) => e.stopPropagation()}
 			>
                 <div className="relative text-center mb-4">
@@ -41,17 +64,28 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose }) => {
                     </button>
                 </div>
 				
-                <div className="flex justify-center my-6">
-                    <img src={LOGO_URL} alt="Etherfields Logo" className="w-36 h-36" />
+                <div className="flex justify-center my-8">
+                    <div className="relative w-36 h-36 flex items-center justify-center">
+                        {/* Glow Elements for a cinematic "chromatic blob" effect */}
+                        {/* A soft, larger, pulsing base glow */}
+                        <div className="absolute w-full h-full rounded-full bg-violet-500 blur-2xl animate-pulse-glow"></div>
+                        
+                        {/* Two smaller-blurred, shifting layers to create chromatic aberration */}
+                        <div className="absolute w-full h-full rounded-full bg-pink-500 blur-xl opacity-80 animate-chromatic-shift-1"></div>
+                        <div className="absolute w-full h-full rounded-full bg-blue-500 blur-xl opacity-70 animate-chromatic-shift-2" style={{ animationDelay: '-5s' }}></div>
+                        
+                        {/* Logo Image */}
+                        <img src={LOGO_URL} alt="Etherfields Logo" className="relative w-full h-full z-10" />
+                    </div>
                 </div>
 
-				<p className="text-gray-300 mb-8 text-center text-sm leading-relaxed">
+				<p className="text-gray-300 mb-10 text-center text-sm leading-relaxed">
 					Etherfields is a small ambient sound designer in your browser. 
 					Pick a base atmosphere, layer in environmental sounds, and blend them together until it feels right.
 				</p>
 
-				<div className="space-y-2">
-					<div className="flex justify-between items-center p-3 bg-[#1c1e2a] rounded-lg">
+				<div className="space-y-3">
+					<div className="flex justify-between items-center p-4 bg-[#1c1e2a] rounded-lg">
 						<span className="font-semibold text-gray-300 text-sm">Follow on YouTube</span>
 						<a
 							href="https://www.youtube.com/@etherfields_app"
@@ -63,7 +97,7 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose }) => {
 							<span>Follow</span>
 						</a>
 					</div>
-					<div className="flex justify-between items-center p-3 bg-[#1c1e2a] rounded-lg">
+					<div className="flex justify-between items-center p-4 bg-[#1c1e2a] rounded-lg">
 						<span className="font-semibold text-gray-300 text-sm">Support Me</span>
 						<a
                             href="https://ko-fi.com/K3K019YFF8"
@@ -75,7 +109,7 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose }) => {
                             Buy me a coffee
                         </a>
 					</div>
-					<div className="flex justify-between items-center p-3 bg-[#1c1e2a] rounded-lg">
+					<div className="flex justify-between items-center p-4 bg-[#1c1e2a] rounded-lg">
 						<span className="font-semibold text-gray-300 text-sm">Contact</span>
 						<a
 							href="mailto:hello@unableton.com"
@@ -86,7 +120,7 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose }) => {
 							hello[at]unableton.com
 						</a>
 					</div>
-					<div className="flex justify-between items-center p-3 bg-[#1c1e2a] rounded-lg">
+					<div className="flex justify-between items-center p-4 bg-[#1c1e2a] rounded-lg">
 						<span className="font-semibold text-gray-300 text-sm">Version</span>
 						<span className="text-gray-400 text-sm">{APP_VERSION}</span>
 					</div>
