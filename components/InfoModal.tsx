@@ -1,4 +1,5 @@
 import React from 'react';
+import { APP_VERSION } from '../constants';
 
 interface InfoModalProps {
 	isOpen: boolean;
@@ -88,7 +89,7 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose }) => {
 					</div>
 					<div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
 						<span className="font-semibold text-gray-200">Version</span>
-						<span className="text-gray-400">1.0.6</span>
+						<span className="text-gray-400">{APP_VERSION}</span>
 					</div>
 				</div>
 
