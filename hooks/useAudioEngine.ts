@@ -207,7 +207,7 @@ export const useAudioEngine = ({ themes, allLayers, initialThemeId, initialVolum
             const sourceNode = context.createMediaElementSource(audioEl);
             const gainNode = context.createGain();
             
-            const initialGain = theme.id === initialThemeId ? initialMainVolume : 0;
+            const initialGain = theme.id === initialThemeId ? (initialMainVolume ?? 0.7) : 0;
             gainNode.gain.value = initialGain;
 
             sourceNode.connect(gainNode).connect(masterGain);
@@ -261,7 +261,7 @@ export const useAudioEngine = ({ themes, allLayers, initialThemeId, initialVolum
         setIsLoading(false);
         setIsInitialized(true);
     }
-  }, [isInitialized, themes, allLayers, initialThemeId, currentVolumes, initialMainVolume]);
+  }, [isInitialized, themes, allLayers, initialThemeId, initialMainVolume, currentVolumes]);
 
 
   const setLayerVolume = useCallback((layerId: string, volume: number, duration: number = 0.1) => {

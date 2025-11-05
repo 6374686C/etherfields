@@ -1,6 +1,6 @@
 import { Theme, SoundLayer } from './types';
 
-export const APP_VERSION = '1.0.7';
+export const APP_VERSION = '1.0.8';
 
 const AUDIO_BASE_URL = 'https://6374686c.github.io/etherfields';
 

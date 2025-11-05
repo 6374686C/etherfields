@@ -14,7 +14,7 @@ import { SparklesIcon, EditIcon, EyeIcon, EyeSlashIcon, InfoIcon, PlusIcon } fro
 
 // ---- Subtitles here (edit freely) ----
 const THEME_SUBTITLES: Record<string, string> = {
-	'dark-drone': 'Immersive dark ambient: resonant engines, cosmic hums, and drifting worlds',
+	'dark-drone': 'Immersive dark ambience: resonant engines, cosmic hums, and drifting worlds',
 	'floating-dreaming': 'Ethereal soundscape: gentle waves of air and light to drift, dream, and unwind',
 	'focus-meditation': 'Calm tonal flow: minimal textures and slow pulses to deepen focus and stillness'
 };
@@ -191,6 +191,8 @@ const App: React.FC = () => {
 
 		// Update version and reload
 		localStorage.setItem('etherfields_app_version', APP_VERSION);
+		// FIX: The `true` argument for `window.location.reload()` is deprecated and can cause errors.
+		// Calling it without arguments is the modern, correct way to reload the page.
 		window.location.reload();
 	}, []);
 
