@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAudioEngine } from './hooks/useAudioEngine';
 import { Theme, SoundLayer } from './types';
-import { THEMES, ALL_SOUND_LAYERS, FADE_TIME } from './constants';
+import { THEMES, ALL_SOUND_LAYERS, FADE_TIME, APP_VERSION } from './constants';
 import ThemeSelector from './components/ThemeSelector';
 import VolumeSlider from './components/VolumeSlider';
 import MasterControls from './components/MasterControls';
@@ -9,6 +9,7 @@ import VantaBackground from './components/VantaBackground';
 import LayerEditor from './components/LayerEditor';
 import InfoModal from './components/InfoModal';
 import CustomThemeEditor from './components/CustomThemeEditor';
+import UpdateNotification from './components/UpdateNotification';
 import { SparklesIcon, EditIcon, EyeIcon, EyeSlashIcon, InfoIcon, PlusIcon } from './components/Icons';
 
 // ---- Subtitles here (edit freely) ----
@@ -43,6 +44,7 @@ const getInitialState = <T,>(key: string, defaultValue: T): T => {
 };
 
 const App: React.FC = () => {
+	const [showUpdate, setShowUpdate] = useState(false);
 	const [isEditing, setIsEditing] = useState(false);
 	const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
 	const [isCustomEditorOpen, setIsCustomEditorOpen] = useState(false);
@@ -128,6 +130,17 @@ const App: React.FC = () => {
 	});
 
 	useEffect(() => {
+		const storedVersion = localStorage.getItem('etherfields_app_version');
+		if (!storedVersion) {
+			// First visit, just set the version.
+			localStorage.setItem('etherfields_app_version', APP_VERSION);
+		} else if (storedVersion !== APP_VERSION) {
+			// It's an old version, show update prompt.
+			setShowUpdate(true);
+		}
+	}, []);
+
+	useEffect(() => {
 		if (isInitialized) localStorage.setItem('etherfields_active_theme_id', JSON.stringify(activeThemeId));
 	}, [activeThemeId, isInitialized]);
 	
@@ -151,6 +164,34 @@ const App: React.FC = () => {
 		const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
 		document.addEventListener('fullscreenchange', handleFullscreenChange);
 		return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+	}, []);
+
+	const handleUpdate = useCallback(() => {
+		const mainVolumes = getInitialState('etherfields_main_theme_volumes', {} as Record<string, number>);
+		const themeVolumes = getInitialState('etherfields_theme_volumes', {} as Record<string, Record<string, number>>);
+
+		const customMainVolume = mainVolumes[CUSTOM_THEME_ID];
+		const customThemeVolumes = themeVolumes[CUSTOM_THEME_ID];
+
+		// Reset default themes by removing their storage. Custom config is preserved.
+		localStorage.removeItem('etherfields_custom_themes');
+		localStorage.removeItem('etherfields_active_theme_id');
+		
+		if (customMainVolume !== undefined) {
+			localStorage.setItem('etherfields_main_theme_volumes', JSON.stringify({ [CUSTOM_THEME_ID]: customMainVolume }));
+		} else {
+			localStorage.removeItem('etherfields_main_theme_volumes');
+		}
+		
+		if (customThemeVolumes !== undefined) {
+			localStorage.setItem('etherfields_theme_volumes', JSON.stringify({ [CUSTOM_THEME_ID]: customThemeVolumes }));
+		} else {
+			localStorage.removeItem('etherfields_theme_volumes');
+		}
+
+		// Update version and reload
+		localStorage.setItem('etherfields_app_version', APP_VERSION);
+		window.location.reload();
 	}, []);
 
 	const handleToggleFullscreen = useCallback(() => {
@@ -347,6 +388,7 @@ const App: React.FC = () => {
 
 	return (
 		<main className="w-screen h-screen overflow-hidden flex items-center justify-center p-4 text-white">
+			{showUpdate && isInitialized && <UpdateNotification onUpdate={handleUpdate} />}
 			<VantaBackground 
 				activeTheme={isInitialized ? activeTheme : preInitTheme} 
 				volumes={isInitialized ? activeVolumes : {}} 
